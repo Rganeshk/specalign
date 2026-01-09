@@ -1,0 +1,80 @@
+# specalign
+
+A command-line tool for generating, iterating, and maintaining LLM prompts through an evolutionary optimization process.
+
+## Overview
+
+specalign helps you systematically develop and optimize prompts for Large Language Models (LLMs). It provides a structured workflow for:
+
+- Defining prompt specifications
+- Compiling specifications into concrete prompts
+- Evaluating prompt performance on datasets
+- Optimizing prompts using evolutionary algorithms (GEPA)
+
+## Installation
+
+Requires Python 3.14 or higher.
+
+### Using uv
+
+```bash
+uv pip install specalign
+```
+
+Activate virtual environment:
+```bash
+source .venv/bin/activate
+```
+
+## Quick Start
+
+### 1. Initialize a Workspace
+
+Create a new specalign workspace in your project directory (e.g., under `examples/{task}`):
+
+```bash
+specalign init
+```
+
+This creates a `.specalign/` directory with the following structure:
+
+```
+.specalign/
+ specs/      # Markdown files describing your prompt requirements
+ prompts/    # Generated prompt versions (numbered)
+ models/     # Model configuration YAML files
+ data/       # Data configuration JSON files
+ results/    # Evaluation and optimization results
+```
+
+### 2. Compile a Prompt
+
+Generate a prompt from your specifications:
+
+```bash
+specalign compile --model .specalign/models/config.yaml
+```
+
+The compiled prompt is saved in `.specalign/prompts/1/`.
+
+### 3. Evaluate Performance
+
+Test your prompt against a dataset:
+
+```bash
+specalign evaluate --model .specalign/models/config.yaml --data .specalign/data/test.json --prompt 1 --max-samples 100
+```
+
+### 4. Optimize with GEPA
+
+Use evolutionary algorithms to improve your prompt:
+
+```bash
+specalign optimize \
+  --model .specalign/models/config.yaml \
+  --data .specalign/data/train.json \
+  --train-samples 30 \
+  --val-samples 30
+```
+
+This creates improved prompt versions based on performance metrics.
