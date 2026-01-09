@@ -165,6 +165,7 @@ def run_optimize(
     prompt_number: Optional[int] = None,
     max_metric_calls: int = 150,
     reflection_lm: str = "openai/gpt-5.2",
+    eval_model_config_path: Path = None,
     use_wandb: bool = False,
 ) -> None:
     """Run the optimize command using GEPA.
@@ -178,6 +179,7 @@ def run_optimize(
         prompt_number: Specific prompt number to use as seed (latest if None).
         max_metric_calls: Maximum number of optimization iterations.
         reflection_lm: LLM to use for reflection/optimization.
+        eval_model_config_path: Path to evaluation model configuration.
         use_wandb: Whether to use Weights & Biases logging.
     """
     if not workspace.exists():
@@ -246,7 +248,8 @@ def run_optimize(
     student_lm = LLMClient(model_config_path=model_config_path)
 
     # Eval model (for evaluating responses)
-    eval_lm = LLMClient.create_default_client("vertex_ai/gemini-2.5-flash")
+    click.echo(f"Using evaluation model: {eval_model_config_path}")
+    eval_lm = LLMClient(model_config_path=eval_model_config_path)
 
     # Prepare datasets
     trainset = [

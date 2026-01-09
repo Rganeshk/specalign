@@ -25,10 +25,16 @@ def cli():
     default=None,
     help="Workspace path (defaults to current directory)"
 )
-def init(path: Path):
+@click.option(
+    "--extraction-model",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    default=None,
+    help="Path to extraction model configuration YAML file (optional, uses default if not provided)"
+)
+def init(path: Path, extraction_model: Path):
     """Initialize a new specalign workspace."""
     workspace = Workspace(path)
-    run_init(workspace)
+    run_init(workspace, extraction_model)
 
 
 @cli.command()
@@ -87,10 +93,16 @@ def compile(path: Path, model: Path):
     default=32,
     help="Maximum number of parallel workers for sample processing (default: 32)"
 )
-def evaluate(path: Path, model: Path, data: Path, max_samples: int, prompt: int, workers: int):
+@click.option(
+    "--eval-model",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="Path to evaluation model configuration YAML file"
+)
+def evaluate(path: Path, model: Path, data: Path, max_samples: int, prompt: int, workers: int, eval_model: Path):
     """Run evaluation on a prompt using specified model and data."""
     workspace = Workspace(path)
-    run_evaluate(workspace, model, data, max_samples, prompt, workers)
+    run_evaluate(workspace, model, data, max_samples, prompt, workers, eval_model)
 
 
 @cli.command()
@@ -142,6 +154,12 @@ def evaluate(path: Path, model: Path, data: Path, max_samples: int, prompt: int,
     help="LLM to use for reflection/optimization (default: openai/gpt-5.2)"
 )
 @click.option(
+    "--eval-model",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="Path to evaluation model configuration YAML file"
+)
+@click.option(
     "--use-wandb",
     is_flag=True,
     help="Enable Weights & Biases logging"
@@ -155,6 +173,7 @@ def optimize(
     prompt: int,
     max_metric_calls: int,
     reflection_lm: str,
+    eval_model: Path,
     use_wandb: bool
 ):
     """Optimize a prompt using GEPA (Generalized Evolutionary Prompt Adaptation)."""
@@ -168,6 +187,7 @@ def optimize(
         prompt,
         max_metric_calls,
         reflection_lm,
+        eval_model,
         use_wandb
     )
 

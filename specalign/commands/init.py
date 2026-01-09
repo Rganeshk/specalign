@@ -153,11 +153,12 @@ def extract_specs_from_prompt(prompt_text: str, llm_client: LLMClient) -> dict[s
         return {"extracted-spec.md": response}
 
 
-def run_init(workspace: Workspace) -> None:
+def run_init(workspace: Workspace, extraction_model_config_path: Optional[Path] = None) -> None:
     """Run the init command.
 
     Args:
         workspace: Workspace instance.
+        extraction_model_config_path: Path to extraction model configuration (optional).
     """
     click.echo("Initializing specalign workspace...")
 
@@ -223,32 +224,57 @@ def run_init(workspace: Workspace) -> None:
     # Ask for existing prompt
     click.echo("\n--- Specification Extraction ---")
     if click.confirm("Do you have an existing prompt to extract specifications from?", default=False):
-        prompt_path = click.prompt("Enter path to prompt file", type=click.Path(exists=True))
+        click.echo("Please paste your prompt content (press Ctrl+D or Ctrl+Z when finished):")
 
-        with open(prompt_path) as f:
-            prompt_text = f.read()
-
-        click.echo("Extracting specifications using LLM (this may take a moment)...")
-
-        extraction_client = LLMClient.create_default_client("vertex_ai/gemini-2.5-flash")
-
+        # Read multiline input from user
+        lines = []
         try:
-            specs = extract_specs_from_prompt(prompt_text, extraction_client)
+            while True:
+                line = input()
+                lines.append(line)
+        except EOFError:
+            pass
 
-            # Save extracted specs
-            for filename, content in specs.items():
-                spec_path = workspace.specs_dir / filename
-                with open(spec_path, "w") as f:
-                    f.write(content)
-                click.echo(f"Created spec file: {spec_path}")
+        prompt_text = "\n".join(lines).strip()
 
-            click.echo("\n--- Review Extracted Specifications ---")
-            click.echo(f"Please review the specifications in {workspace.specs_dir}")
-            click.echo("You can edit them manually before running 'specalign compile'")
-
-        except Exception as e:
-            click.echo(f"Error during spec extraction: {e}", err=True)
+        if not prompt_text:
+            click.echo("No prompt content provided. Skipping specification extraction.")
             click.echo(f"You can manually create spec files in the {workspace.specs_dir} directory")
+        else:
+            # Save the original prompt to prompts/0/
+            prompt_dir = workspace.create_prompt_dir(number=0)
+            prompt_file = prompt_dir / "prompt.md"
+            with open(prompt_file, "w") as f:
+                f.write(prompt_text)
+            click.echo(f"Saved original prompt to {prompt_file}")
+
+            click.echo("Extracting specifications using LLM (this may take a while)...")
+
+            if extraction_model_config_path:
+                click.echo(f"Using extraction model: {extraction_model_config_path}")
+                extraction_client = LLMClient(model_config_path=extraction_model_config_path)
+            else:
+                default_extraction_model = "openai/gpt-4.1"
+                click.echo(f"Using default extraction model: {default_extraction_model}")
+                extraction_client = LLMClient.create_default_client(default_extraction_model)
+
+            try:
+                specs = extract_specs_from_prompt(prompt_text, extraction_client)
+
+                # Save extracted specs
+                for filename, content in specs.items():
+                    spec_path = workspace.specs_dir / filename
+                    with open(spec_path, "w") as f:
+                        f.write(content)
+                    click.echo(f"Created spec file: {spec_path}")
+
+                click.echo("\n--- Review Extracted Specifications ---")
+                click.echo(f"Please review the specifications in {workspace.specs_dir}")
+                click.echo("You can edit them manually before running 'specalign compile'")
+
+            except Exception as e:
+                click.echo(f"Error during spec extraction: {e}", err=True)
+                click.echo(f"You can manually create spec files in the {workspace.specs_dir} directory")
 
     else:
         click.echo(f"You can manually create spec files in the {workspace.specs_dir} directory")

@@ -52,7 +52,7 @@ This creates a `.specalign/` directory with the following structure:
 Generate a prompt from your specifications:
 
 ```bash
-specalign compile --model .specalign/models/config.yaml
+specalign compile --model .specalign/models/default.yaml
 ```
 
 The compiled prompt is saved in `.specalign/prompts/1/`.
@@ -62,7 +62,12 @@ The compiled prompt is saved in `.specalign/prompts/1/`.
 Test your prompt against a dataset:
 
 ```bash
-specalign evaluate --model .specalign/models/config.yaml --data .specalign/data/test.json --prompt 1 --max-samples 100
+specalign evaluate \
+  --model .specalign/models/default.yaml \
+  --eval-model .specalign/models/default.yaml \
+  --data .specalign/data/training_data.json \
+  --prompt 1 \
+  --max-samples 30
 ```
 
 ### 4. Optimize with GEPA
@@ -71,8 +76,9 @@ Use evolutionary algorithms to improve your prompt:
 
 ```bash
 specalign optimize \
-  --model .specalign/models/config.yaml \
-  --data .specalign/data/train.json \
+  --model .specalign/models/default.yaml \
+  --eval-model .specalign/models/default.yaml \
+  --data .specalign/data/training_data.json \
   --train-samples 30 \
   --val-samples 30
 ```

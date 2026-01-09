@@ -63,7 +63,8 @@ def run_evaluate(
     data_config_path: Path,
     max_samples: Optional[int] = None,
     prompt_number: Optional[int] = None,
-    max_workers: int = 32
+    max_workers: int = 32,
+    eval_model_config_path: Path = None
 ) -> None:
     """Run the evaluate command.
 
@@ -74,6 +75,7 @@ def run_evaluate(
         max_samples: Maximum number of samples to evaluate.
         prompt_number: Specific prompt number to use (latest if None).
         max_workers: Maximum number of parallel workers (default: 10).
+        eval_model_config_path: Path to evaluation model configuration.
     """
     if not workspace.exists():
         click.echo("Error: Workspace not initialized. Run 'specalign init' first.", err=True)
@@ -118,14 +120,16 @@ def run_evaluate(
 
     # Create LLM clients
     model_client = LLMClient(model_config_path=model_config_path)
-    eval_client = LLMClient.create_default_client("vertex_ai/gemini-2.5-flash")
+    click.echo(f"Using evaluation model: {eval_model_config_path}")
+    eval_client = LLMClient(model_config_path=eval_model_config_path)
+    eval_model_display = str(eval_model_config_path)
 
     # Run evaluation
     results = {
         "run_metadata": {
             "command": f"specalign evaluate --model={model_config_path} --data={data_config_path} --max_samples={max_samples or 'all'}",
             "model_path": str(model_config_path),
-            "evaluation_model": "vertex_ai/gemini-2.5-flash",
+            "evaluation_model": eval_model_display,
             "data_path": str(data_config_path),
             "max_samples": len(samples),
             "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
