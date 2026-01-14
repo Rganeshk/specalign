@@ -6,10 +6,10 @@ import click
 
 from specalign.commands.compile import run_compile
 from specalign.commands.evaluate import run_evaluate
+from specalign.commands.generate import run_generate
 from specalign.commands.init import run_init
 from specalign.commands.optimize import run_optimize
 from specalign.workspace import Workspace
-
 
 @click.group()
 @click.version_option(version="0.1.0")
@@ -103,6 +103,43 @@ def evaluate(path: Path, model: Path, data: Path, max_samples: int, prompt: int,
     """Run evaluation on a prompt using specified model and data."""
     workspace = Workspace(path)
     run_evaluate(workspace, model, data, max_samples, prompt, workers, eval_model)
+
+
+@cli.command()
+@click.option(
+    "--path",
+    type=click.Path(file_okay=False, dir_okay=True, path_type=Path),
+    default=None,
+    help="Workspace path (defaults to current directory)"
+)
+@click.option(
+    "--model",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="Path to model configuration YAML file"
+)
+@click.option(
+    "--output",
+    type=click.Path(file_okay=True, dir_okay=False, path_type=Path),
+    default=None,
+    help="Output path for test cases file (default: .specalign/test_cases/test_cases_TIMESTAMP.yaml)"
+)
+@click.option(
+    "--count",
+    type=int,
+    default=10,
+    help="Total number of test cases to generate (default: 10)"
+)
+@click.option(
+    "--per-spec",
+    type=int,
+    default=None,
+    help="Number of test cases per specification (overrides count distribution)"
+)
+def generate(path: Path, model: Path, output: Path, count: int, per_spec: int):
+    """Generate synthetic test cases based on specifications."""
+    workspace = Workspace(path)
+    run_generate(workspace, model, output, count, per_spec)
 
 
 @cli.command()
