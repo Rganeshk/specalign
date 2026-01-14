@@ -9,7 +9,7 @@ class Workspace:
     """Manages the specalign workspace structure."""
 
     WORKSPACE_DIR = ".specalign"
-    SUBDIRS = ["specs", "prompts", "models", "data", "results"]
+    SUBDIRS = ["specs", "prompts", "models", "data", "results", "test_cases"]
 
     def __init__(self, root_path: Optional[Path] = None):
         """Initialize workspace.
@@ -45,9 +45,16 @@ class Workspace:
         """Return results directory path."""
         return self.workspace_root / "results"
 
+    @property
+    def test_cases_dir(self) -> Path:
+        """Return test cases directory path."""
+        return self.workspace_root / "test_cases"
+
     def exists(self) -> bool:
         """Check if workspace is initialized."""
-        return all((self.workspace_root / subdir).exists() for subdir in self.SUBDIRS)
+        # Core directories required for workspace to exist
+        core_dirs = ["specs", "prompts", "models", "data", "results"]
+        return all((self.workspace_root / subdir).exists() for subdir in core_dirs)
 
     def initialize(self) -> None:
         """Create workspace directory structure."""
