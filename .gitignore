@@ -25,6 +25,6 @@ uv.lock
 # OS
 .DS_Store
 
-# Specalign workspace (optional - uncomment if you don't want to track workspaces)
-# .specalign/
+# Specalign workspace (user-specific, should not be committed)
+.specalign/
 examples/
